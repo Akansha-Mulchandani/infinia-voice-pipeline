@@ -27,7 +27,8 @@ faster-whisper>=0.10.0
 
 # Speaker embeddings
 # Using resemblyzer for speaker similarity (lighter than SpeechBrain)
-resemblyzer>=0.2.3
+# Removed version constraint due to limited availability on PyPI
+resemblyzer
 
 # WER computation
 jiwer>=3.0.0
