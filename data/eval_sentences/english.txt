@@ -1,3 +1,15 @@
 # English evaluation sentences
-# 10-15 test sentences including numbers and a name
-# To be populated in Step 3
+# 12 test sentences including numbers and a name
+
+The quick brown fox jumps over the lazy dog.
+Hello, my name is Alex and I am testing voice cloning technology.
+There are 7 days in a week and 24 hours in a day.
+The temperature today is 23 degrees Celsius.
+I have 3 apples and 5 oranges in my basket.
+The meeting is scheduled for 4:30 PM on Friday.
+Sarah has been Working here for 10 years.
+The project deadline is in 2 weeks from now.
+Please call me at 555-123-4567 if you have any questions.
+The train arrives at platform 9 in 15 minutes.
+We need to order 50 units of the new product.
+The total cost comes to $199.99 plus tax.

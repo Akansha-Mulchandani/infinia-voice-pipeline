@@ -1,2 +1,44 @@
 # Requirements for infinia-voice-pipeline
-# This file will be populated in Step 1
+# Target: Kaggle GPU notebook (T4, 16GB VRAM, Python 3.10)
+# NOTE: Kaggle comes with torch + CUDA preinstalled. Do NOT reinstall torch
+# unless a specific version is required by a dependency.
+
+# Core ML dependencies (transformers, accelerate for HF models)
+transformers>=4.36.0
+accelerate>=0.25.0
+
+# TTS libraries
+# NOTE: coqui-ai/TTS is archived. Using the maintained fork:
+TTS>=0.22.0  # Coqui TTS fork for XTTS-v2
+# Chatterbox-TTS - install via pip (Resemble AI's zero-shot cloning)
+chatterbox-tts>=0.1.0
+
+# CosyVoice - needs git install (see KAGGLE.md for exact command)
+# Not listed here - will be installed separately in Kaggle notebook
+
+# Audio processing
+soundfile>=0.12.0
+librosa>=0.10.0
+numpy>=1.24.0
+
+# Speech recognition for WER
+faster-whisper>=0.10.0
+
+# Speaker embeddings
+# Using resemblyzer for speaker similarity (lighter than SpeechBrain)
+resemblyzer>=0.2.3
+
+# WER computation
+jiwer>=3.0.0
+
+# Utilities
+pyyaml>=6.0
+pandas>=2.0.0
+tqdm>=4.66.0
+
+# HuggingFace hub for model downloads
+huggingface-hub>=0.20.0
+
+# Additional dependencies that may be needed
+scipy>=1.10.0
+scikit-learn>=1.3.0
