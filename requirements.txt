@@ -8,11 +8,10 @@ transformers>=4.36.0
 accelerate>=0.25.0
 
 # TTS libraries
-# NOTE: coqui-ai/TTS is archived. Using the maintained fork.
-# Removed version constraint due to Python 3.12 compatibility issues on Kaggle
-TTS  # Coqui TTS fork for XTTS-v2
+# NOTE: TTS package has no Python 3.12 compatible versions on PyPI.
+# Must be installed from git (see KAGGLE.md for exact command).
+# Not listed here - will be installed separately in Kaggle notebook.
 # Chatterbox-TTS - install via pip (Resemble AI's zero-shot cloning)
-# Removed version constraint to allow pip to find compatible version
 chatterbox-tts
 
 # CosyVoice - needs git install (see KAGGLE.md for exact command)

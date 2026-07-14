@@ -39,7 +39,17 @@ Replace `<YOUR_USERNAME>` with your GitHub username.
 
 **Note**: This may take 5-10 minutes. Do not interrupt.
 
-### Cell 3: Install CosyVoice (git install)
+### Cell 3: Install TTS (git install)
+
+TTS (Coqui TTS fork) needs to be installed separately via git due to Python 3.12 compatibility:
+
+```bash
+!pip install git+https://github.com/coqui-ai/TTS.git
+```
+
+**Note**: This is required for XTTS-v2 pipelines (Arabic and Hindi). If this fails, XTTS-v2 will not work.
+
+### Cell 4: Install CosyVoice (git install)
 
 CosyVoice needs to be installed separately via git:
 
@@ -49,7 +59,7 @@ CosyVoice needs to be installed separately via git:
 
 **Note**: If this fails, the CosyVoice2 pipeline will not work, but other pipelines (Chatterbox, XTTS-v2, etc.) should still function.
 
-### Cell 4: Upload reference audio
+### Cell 5: Upload reference audio
 
 If you haven't already uploaded your reference audio, do so now:
 
@@ -69,9 +79,9 @@ Verify the file exists:
 !ls -lh data/reference_audio/me.wav
 ```
 
-### Cell 5: Run English pipelines
+### Cell 6: Run English pipelines
 
-#### Cell 5a: Chatterbox (English)
+#### Cell 6a: Chatterbox (English)
 
 ```bash
 !python pipelines/english/run_chatterbox.py --ref data/reference_audio/me.wav
@@ -83,7 +93,7 @@ Verify the file exists:
 - Chatterbox import error: The API may have changed - check the actual import path
 - CUDA out of memory: Try reducing batch size or using CPU
 
-#### Cell 5b: CosyVoice2 (English)
+#### Cell 6b: CosyVoice2 (English)
 
 ```bash
 !python pipelines/english/run_cosyvoice2.py --ref data/reference_audio/me.wav
@@ -93,9 +103,9 @@ Verify the file exists:
 
 **If this fails**: Paste the error output. CosyVoice installation issues are common - see Cell 3.
 
-### Cell 6: Run Arabic pipelines
+### Cell 7: Run Arabic pipelines
 
-#### Cell 6a: XTTS-v2 (Arabic)
+#### Cell 7a: XTTS-v2 (Arabic)
 
 ```bash
 !python pipelines/arabic/run_xtts.py --ref data/reference_audio/me.wav
@@ -105,7 +115,7 @@ Verify the file exists:
 
 **If this fails**: Check if XTTS-v2 supports Arabic in the installed version. The language code may need to be adjusted.
 
-#### Cell 6b: MMS-TTS (Arabic)
+#### Cell 7b: MMS-TTS (Arabic)
 
 ```bash
 !python pipelines/arabic/run_mms_tts.py --ref data/reference_audio/me.wav
@@ -115,9 +125,9 @@ Verify the file exists:
 
 **Important note**: MMS-TTS does NOT support voice cloning. The output will use the model's pre-trained voice, not your reference speaker. Speaker similarity metrics will be meaningless for this model.
 
-### Cell 7: Run Hindi pipelines
+### Cell 8: Run Hindi pipelines
 
-#### Cell 7a: Indic Parler-TTS (Hindi)
+#### Cell 8a: Indic Parler-TTS (Hindi)
 
 ```bash
 !python pipelines/hindi/run_indic_parler_tts.py --ref data/reference_audio/me.wav
@@ -127,7 +137,7 @@ Verify the file exists:
 
 **If this fails**: Check if Indic Parler-TTS supports voice cloning. Some Indic TTS models are single-speaker only.
 
-#### Cell 7b: XTTS-v2 (Hindi)
+#### Cell 8b: XTTS-v2 (Hindi)
 
 ```bash
 !python pipelines/hindi/run_xtts_hindi.py --ref data/reference_audio/me.wav
@@ -137,7 +147,7 @@ Verify the file exists:
 
 **If this fails**: Check if XTTS-v2 supports Hindi in the installed version. The language code may need to be adjusted.
 
-### Cell 8: Collect MOS ratings (optional but recommended)
+### Cell 9: Collect MOS ratings (optional but recommended)
 
 Download the generated audio samples and listen to them locally, then rate them:
 
@@ -161,7 +171,7 @@ Download `samples.zip` from the "Output" tab, extract locally, and rate each cli
 
 **Note**: You can also run the interactive MOS collection directly in Kaggle, but you won't be able to hear the audio easily. It's better to download clips and rate them locally.
 
-### Cell 9: Run full evaluation
+### Cell 10: Run full evaluation
 
 ```bash
 !python eval/run_all_evals.py --hardware "T4 x2" --ref data/reference_audio/me.wav
@@ -171,7 +181,7 @@ Download `samples.zip` from the "Output" tab, extract locally, and rate each cli
 
 **If this fails**: Check that all sample directories exist and contain audio files. The evaluation will skip pipelines that don't have samples.
 
-### Cell 10: Download results
+### Cell 11: Download results
 
 ```bash
 !zip -r /kaggle/working/results.zip results/
