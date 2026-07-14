@@ -1,0 +1,3 @@
+# English evaluation sentences
+# 10-15 test sentences including numbers and a name
+# To be populated in Step 3

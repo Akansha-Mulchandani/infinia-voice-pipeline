@@ -1,0 +1,42 @@
+# Audio files (too large for git)
+data/reference_audio/*.wav
+results/samples/*.wav
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Model checkpoints and cache
+checkpoints/
+models/
+.cache/
+.huggingface/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Environment variables
+.env
+
+# Results CSV is NOT excluded (we want it in git)
+# But exclude raw MOS data if it gets large
+results/mos_raw.csv
