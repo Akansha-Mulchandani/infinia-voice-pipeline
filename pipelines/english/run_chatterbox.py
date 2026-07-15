@@ -108,7 +108,13 @@ class ChatterboxPipeline(TTSPipeline):
             # model.generate() returns a torch tensor shaped [1, num_samples]
             # at self.model.sr - save with torchaudio, not the generic save_audio
             # helper, to avoid an incorrect sample rate assumption.
-            os.makedirs(os.path.dirname(out_path), exist_ok=True)
+            # NOTE: out_path may be a bare filename with no directory component
+            # (e.g. "temp_latency.wav" from the eval harness) - os.path.dirname()
+            # returns '' in that case, and os.makedirs('') raises FileNotFoundError.
+            # Only create a directory if one is actually specified.
+            out_dir = os.path.dirname(out_path)
+            if out_dir:
+                os.makedirs(out_dir, exist_ok=True)
             ta.save(out_path, wav.cpu() if wav.is_cuda else wav, self.sample_rate)
 
             return {
