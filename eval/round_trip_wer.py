@@ -51,7 +51,13 @@ def transcribe_audio(audio_path: str, language: str = "en") -> dict:
         model = WhisperModel("large-v3", device=device, compute_type=compute_type)
         
         # Transcribe
-        segments, info = model.transcribe(audio_path, language=language)
+        # NOTE: vad_filter=False - faster-whisper's default VAD (voice activity
+        # detection) filter uses a recursive segment-splitting algorithm that can
+        # hit Python's recursion limit on very short clips (e.g. single TTS
+        # sentences a few seconds long). Since our inputs are already clean,
+        # single-sentence clips with no silence to filter out, VAD isn't needed
+        # here and disabling it avoids the crash entirely.
+        segments, info = model.transcribe(audio_path, language=language, vad_filter=False)
         
         # Combine segments
         transcription = " ".join([segment.text for segment in segments])
