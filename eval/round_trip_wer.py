@@ -9,11 +9,21 @@ Target: WER ≤ 10%
 import os
 import sys
 import argparse
+import re
 
 # Add parent directory to path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'pipelines', 'common'))
 
 from audio_utils import load_audio
+
+
+def normalize_text(text: str) -> str:
+    """Strip punctuation and normalize whitespace for fair WER comparison -
+    TTS/ASR round-trips naturally drop punctuation, so comparing raw strings
+    inflates WER with false 'errors' that aren't actual speech mistakes."""
+    text = re.sub(r'[،,\.!؟?؛;:"\'\-]', '', text)
+    text = re.sub(r'\s+', ' ', text).strip()
+    return text
 
 
 def transcribe_audio(audio_path: str, language: str = "en") -> dict:
@@ -94,7 +104,7 @@ def compute_wer(reference_text: str, hypothesis_text: str) -> dict:
         }
     
     try:
-        wer = jiwer.wer(reference_text, hypothesis_text)
+        wer = jiwer.wer(normalize_text(reference_text), normalize_text(hypothesis_text))
         
         return {
             "wer": wer,
