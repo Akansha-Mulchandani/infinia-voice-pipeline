@@ -98,8 +98,11 @@ class MMSArabicPipeline(TTSPipeline):
                 "error": "Text cannot be empty"
             }
         
-        # Ensure output directory exists
-        os.makedirs(os.path.dirname(out_path), exist_ok=True)
+        # Ensure output directory exists (skip if out_path is a bare
+        # filename with no directory component, e.g. from eval scripts)
+        out_dir = os.path.dirname(out_path)
+        if out_dir:
+            os.makedirs(out_dir, exist_ok=True)
         
         if not self.is_loaded:
             return {
