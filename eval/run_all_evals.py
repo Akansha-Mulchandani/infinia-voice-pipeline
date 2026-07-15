@@ -105,9 +105,13 @@ def evaluate_pipeline(
         # Get pipeline class
         pipeline_class = None
         for name in dir(pipeline_module_obj):
-            if name.endswith('Pipeline'):
-                pipeline_class = getattr(pipeline_module_obj, name)
-                break
+            if name.endswith('Pipeline') and name != 'TTSPipeline':
+                candidate = getattr(pipeline_module_obj, name)
+                # Skip the abstract base class itself and anything that
+                # isn't actually a usable subclass
+                if isinstance(candidate, type) and not getattr(candidate, '__abstractmethods__', None):
+                    pipeline_class = candidate
+                    break
         
         if not pipeline_class:
             results["notes"] += "Could not find pipeline class. "
