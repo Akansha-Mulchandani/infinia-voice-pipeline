@@ -92,8 +92,11 @@ def save_audio(audio: np.ndarray, out_path: str, sample_rate: int = 16000) -> No
     if len(audio) == 0:
         raise ValueError("Audio array is empty")
     
-    # Ensure output directory exists
-    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    # Ensure output directory exists (skip if out_path is a bare
+    # filename with no directory component, e.g. from eval scripts)
+    out_dir = os.path.dirname(out_path)
+    if out_dir:
+        os.makedirs(out_dir, exist_ok=True)
     
     # Save as WAV
     sf.write(out_path, audio, sample_rate)

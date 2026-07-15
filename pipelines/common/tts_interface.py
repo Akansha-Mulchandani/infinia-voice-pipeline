@@ -74,8 +74,11 @@ class TTSPipeline(ABC):
         if not os.path.exists(reference_audio_path):
             raise ValueError(f"Reference audio not found: {reference_audio_path}")
         
-        # Ensure output directory exists
-        os.makedirs(os.path.dirname(out_path), exist_ok=True)
+        # Ensure output directory exists (skip if out_path is a bare
+        # filename with no directory component, e.g. from eval scripts)
+        out_dir = os.path.dirname(out_path)
+        if out_dir:
+            os.makedirs(out_dir, exist_ok=True)
     
     def get_model_info(self) -> Dict:
         """
