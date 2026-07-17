@@ -2,6 +2,6 @@ language,model,hardware,MOS,speaker_cosine_sim,latency_ms,RTF,WER,notes
 en,chatterbox,T4 x2,4.00,0.8897,3938.54,1.178,0.00%,Misses latency and RTF targets. All other targets met.
 en,cosyvoice2,T4 x2 (ran CPU-only - onnxruntime-gpu not installed),4.62,0.9244,10335.12,2.648,0.00%,Highest speaker similarity of all models tested. Latency/RTF not directly comparable to GPU-run models since this ran on CPU.
 ar,xtts-v2,T4 x2,3.94,0.7899,17486.24,3.279,0.00%,Slight miss on MOS target (3.94 vs 4.0). Misses latency and RTF targets.
-ar,mms-tts,T4 x2,4.08,0.5245,147.77,0.011,22.22%,Does not support voice cloning by design - low similarity is expected, not a bug. Fastest model tested by a wide margin.
+ar,mms-tts,T4 x2,4.08,0.5245,147.77,0.011,22.22%,"Does not support voice cloning by design - low similarity is expected, not a bug. Fastest model tested by a wide margin."
 hi,xtts-v2,T4 x2,4.02,0.7970,17811.17,3.081,26.67%,2 of 12 sentences failed to synthesize entirely due to a num2words library gap for Hindi digit expansion (see model_comparison.md).
 hi,indic-parler-tts,T4 x2,3.96,0.5302,9382.00,1.628,66.67%,Not a voice-cloning model - uses a fixed text description of voice characteristics instead of the reference audio. High WER likely reflects weaker text-following fidelity relative to other models; not fully root-caused given time constraints.
