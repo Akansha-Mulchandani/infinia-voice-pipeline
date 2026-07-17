@@ -116,11 +116,15 @@ class MMSArabicPipeline(TTSPipeline):
         try:
             start_time = time.time()
             
-            # Tokenize text
-            inputs = self.processor(text=text, return_tensors="pt")
+            # Tokenize text and move inputs to the same device as the model.
+            # NOTE: the model is moved to GPU in load() via self.model.to(device),
+            # but tokenizer output defaults to CPU tensors - without this explicit
+            # move, GPU sessions would throw a device-mismatch error here.
+            import torch
+            device = next(self.model.parameters()).device
+            inputs = self.processor(text=text, return_tensors="pt").to(device)
             
             # Generate speech
-            import torch
             with torch.no_grad():
                 output = self.model(**inputs).waveform
             
