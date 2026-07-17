@@ -1,6 +1,5 @@
-# Audio files (too large for git)
-data/reference_audio/*.wav
-results/samples/*.wav
+
+
 
 # Virtual environments
 venv/
@@ -26,7 +25,7 @@ models/
 *.swp
 *.swo
 *~
-
+``
 # OS
 .DS_Store
 Thumbs.db
