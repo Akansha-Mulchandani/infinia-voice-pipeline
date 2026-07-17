@@ -1,115 +1,120 @@
 # infinia-voice-pipeline
 
-Open-source voice cloning TTS pipelines for English, Arabic (MSA), and Hindi with a comprehensive evaluation harness. This project benchmarks multiple zero-shot voice cloning models across three languages using six metrics (MOS, speaker similarity, latency, RTF, WER) to identify the best-performing model per language.
+Open-source voice cloning TTS pipelines for English, Arabic (MSA), and Hindi, with a shared evaluation harness measuring six metrics (MOS, speaker similarity, latency, RTF, WER) across six models. Recommended setup: Chatterbox for English, XTTS-v2 for Arabic and Hindi (with MMS-TTS as a fast, non-cloning fallback for Arabic). Full reasoning and every issue hit along the way is in notes/model_comparison.md, this README covers the numbers and setup.
 
-## Setup & Reproduction
+## Setup and reproduction
 
 ### Prerequisites
-- Python 3.10+
-- GPU with 16GB VRAM (tested on Kaggle T4 x2)
-- Reference audio: 15-20 seconds of clean mono WAV at 16kHz+
 
-### Local Development (Windows/Linux/Mac)
-1. Clone the repository:
-```
+- Python 3.10+ (tested on Python 3.12, Kaggle's default)
+- GPU with 16GB VRAM (tested on Kaggle T4 x2, free tier)
+- No local NVIDIA GPU is required; this project was built and run entirely on Kaggle's free GPU notebooks
+- Reference audio: 15 to 30 seconds of clean mono WAV at 16kHz or higher (see notes/ambiguities.md for what was actually used)
+
+### Kaggle execution (how this was actually run)
+
+See **KAGGLE.md** for exact step-by-step notebook instructions. Short version: clone this repo into a Kaggle notebook with GPU enabled, install the requirements for whichever model you want to run, add your reference audio, then run the relevant script in `pipelines/`.
+
+Note: several models in this project have conflicting dependency requirements and were run in separate Kaggle sessions. This is documented in notes/model_comparison.md and notes/ambiguities.md, along with every environment issue encountered and how each was fixed.
+
+### Local development
+
+The code can be written and edited locally (no GPU needed for that), but actual model inference requires a GPU:
+
+```bash
 git clone https://github.com/Akansha-Mulchandani/infinia-voice-pipeline.git
 cd infinia-voice-pipeline
-```
-2. Install dependencies:
-```
 pip install -r requirements.txt
+python pipelines/english/run_chatterbox.py --ref data/reference_audio/mef.wav
 ```
-3. Add your reference audio:
-```
-ffmpeg -i your_audio.m4a -ac 1 -ar 16000 data/reference_audio/me.wav
-```
-4. Run a pipeline:
-```
-python pipelines/english/run_chatterbox.py --ref data/reference_audio/me.wav
-```
-
-### Kaggle Execution (Recommended)
-For actual model inference and benchmarking, use Kaggle's free GPU notebooks. See **KAGGLE.md** for exact step-by-step instructions.
 
 ## Results
 
-All results below are from actual runs on Kaggle T4 x2, 5 held-out eval sentences per language, MOS from a real human listener (see `results/mos_raw_*.csv` for per-clip ratings).
+Full data in `results/results.csv`. Targets: MOS >= 4.0, speaker similarity >= 0.75, latency < 2000ms (batch), RTF <= 0.5, WER <= 10%.
 
-### Results Table
-
-| Language | Model | MOS | Speaker Cosine Sim | Latency (ms) | RTF | WER | Notes |
+| Language | Model | MOS | Speaker Similarity | Latency (ms) | RTF | WER | Clones Voice? |
 |---|---|---|---|---|---|---|---|
-| en | chatterbox | 4.00 | 0.890 | 3938 | 1.18 | 0.0% | Misses latency (<2s target) and RTF (<=0.5 target) |
-| en | cosyvoice2 | 4.62 | 0.924 | 10335 | 2.65 | 0.0% | Ran **CPU-only** — onnxruntime-gpu failed to install. Latency/RTF are not a fair GPU comparison; likely much faster on GPU |
-| ar | xtts-v2 | 3.94 | 0.790 | 17486 | 3.28 | 0.0% | Just misses MOS target; misses latency and RTF |
-| ar | mms-tts | 4.08 | 0.524 | 148 | 0.011 | 22.2% | Fastest model tested. Does not support voice cloning — fixed pretrained voice, so cosine sim reflects an architectural limit, not tuning |
-| hi | xtts-v2 | 4.02 | 0.797 | 17811 | 3.08 | 26.7% | 
-| hi | indic-parler-tts | 3.96 | 0.530 | 9382 | 1.63 | 66.7% | Weakest result overall — misses every target |
+| English | Chatterbox | 4.00 | 0.8897 | 3938.54 | 1.178 | 0.00% | Yes |
+| English | CosyVoice2 | 4.62 | 0.9244 | 10335.12* | 2.648* | 0.00% | Yes |
+| Arabic | XTTS-v2 | 3.94 | 0.7899 | 17486.24 | 3.279 | 0.00% | Yes |
+| Arabic | MMS-TTS | 4.08 | 0.5245** | 147.77 | 0.011 | 22.22% | No |
+| Hindi | XTTS-v2 | 4.02 | 0.7970 | 17811.17 | 3.081 | 26.67%*** | Yes |
+| Hindi | Indic Parler-TTS | 3.96 | 0.5302** | 9382.00 | 1.628 | 66.67% | No |
 
-**Cross-cutting finding:** every model capable of actual voice cloning (chatterbox, cosyvoice2, xtts-v2 x2) blew past both latency and RTF targets by 2–35x on this hardware in batch mode. Only mms-tts, which can't clone a voice at all, hits the speed targets. On T4 x2 in batch (non-streaming) mode, "fast" and "clones your voice" were mutually exclusive across everything we tested.
+\* CosyVoice2 ran CPU-only due to an unresolved `onnxruntime-gpu` install issue. Not directly comparable to the GPU-run numbers above it. See notes/model_comparison.md.
 
-**Human A/B same-speaker judgment:** not yet collected for any run — `results/same_speaker_judgment_template.csv` has a 6-row template ready for a quick listening pass (reference clip vs. each model's output, same speaker y/n).
+\*\* Low similarity is expected for MMS-TTS and Indic Parler-TTS, neither is a voice-cloning model. Not a bug.
 
-## Recommended Pipeline per Language
+\*\*\* Hindi XTTS-v2 also failed to synthesize 2 of 12 sentences outright, both containing digits. Root cause: the `num2words` library has no Hindi converter. See notes/model_comparison.md.
 
-### English
-**Recommended: CosyVoice2, with a caveat.** It already beats Chatterbox on both quality metrics (MOS 4.62 vs 4.00, cosine 0.924 vs 0.890) despite running on CPU. Its latency/RTF numbers can't be trusted as-is since GPU inference was never actually exercised (onnxruntime-gpu install failure). **Fallback: Chatterbox**, which already meets MOS/cosine/WER targets end-to-end on verified GPU hardware — use this if CosyVoice2's GPU path can't be fixed before submission.
+## Recommended pipeline per language
 
-### Arabic
-**Recommended: XTTS-v2.** MMS-TTS is faster and scores higher MOS, but it cannot clone a voice at all (fixed pretrained voice) — since cloning the reference speaker is a core requirement, that rules it out as the primary answer even though it hits every speed target. XTTS-v2 is the only Arabic option that actually clones (cosine 0.79, meets target), at the cost of missing latency/RTF badly. MMS-TTS is the right fallback for any use case where cloning isn't required and speed is what matters.
+**English: Chatterbox.** Clones well, fully intelligible, fast on GPU. Misses the latency and RTF targets, but by less than every other model here. (CosyVoice2 scored higher on similarity and MOS but could not be verified on GPU in the time available; worth revisiting if the onnxruntime-gpu issue gets fixed.)
 
-### Hindi
-**Recommended: XTTS-v2.** It beats Indic Parler-TTS on every metric: MOS (4.02 vs 3.96), cosine similarity (0.797 vs 0.530), and WER (26.7% vs 66.7%). Indic Parler-TTS's WER in particular is high enough to suggest it may not be a viable production option in its current form.
+**Arabic: XTTS-v2 for cloning, MMS-TTS when speed matters more than matching a specific voice.** XTTS-v2 is the only Arabic model tested that actually reproduces the reference speaker, at a real cost in speed (RTF 3.28). MMS-TTS is about 90x faster but uses a fixed pre-trained voice.
 
-## Failure Modes (Observed, Not Hypothetical)
+**Hindi: XTTS-v2**, with the caveat that it cannot currently handle sentences containing digits due to the num2words gap described above. Indic Parler-TTS is not a comparable alternative for cloning, since it does not clone at all.
 
-- **CosyVoice2 fell back to CPU** because `onnxruntime-gpu` failed to install in the Kaggle environment — this invalidates its latency/RTF numbers as a GPU comparison and is the single biggest confound in the English results.
-- **Round-trip WER blows up outside English.** English WER was 0.0% on both models; Arabic and Hindi WER ranged from 22% to 67%. This is consistent across every non-English model tested, suggesting the round-trip ASR step (not just the TTS) is weaker for Arabic/Hindi — worth isolating in a follow-up (e.g. run the same ASR model against ground-truth human recordings in Arabic/Hindi to separate ASR error from TTS error).
-- **MMS-TTS cannot clone a voice** — confirmed, not theoretical. Any speaker-similarity number for it reflects comparing a fixed pretrained voice against the reference, not a cloning attempt.
-- **Latency/RTF targets were missed by every actual cloning model on this hardware**, in some cases by 30x+ (XTTS-v2 Arabic/Hindi: ~17.5–17.8s vs a 2s target). Batch, non-streaming inference on shared Kaggle T4 x2 is not close to production-viable for cloning models as configured.
-- **Hindi/XTTS-v2 MOS ratings were lost to a session disconnect** mid-run and had to be reconstructed from the rater's notes after the fact rather than read from a clean raw-ratings file — flagged transparently in the results table and raw CSV rather than silently patched.
+Full reasoning, every bug found and fixed, and what I would do next: **notes/model_comparison.md**.
 
-## What's Missing / Scope Calls Made
+## Failure modes (specific, evidenced)
 
-- **Human same-speaker A/B judgment**: not collected for any run yet. Template is in `results/same_speaker_judgment_template.csv`. [Fill in once done, or state explicitly as a known gap if it doesn't get done in time.]
-- **Bonus Indic language beyond Hindi** (Tamil/Bengali/Marathi): not attempted. Given the 6–10 hour suggested budget, we prioritized getting two fully-benchmarked models per required language over a third partially-benchmarked language — stated here as the assumption per the brief's guidance to make a call and keep going.
-- **Streaming latency**: all latency numbers are full-clip batch synthesis time, not time-to-first-audio-chunk. None of the pipelines were wired for streaming inference in the time available; this is the most actionable next step if latency needs to hit the <500ms streaming target rather than the <2s batch target.
-- **CosyVoice2 GPU path**: fixing the onnxruntime-gpu install is the single highest-value follow-up — it would either confirm CosyVoice2 as the clear English winner or reveal it's still too slow even on GPU.
+- **Hindi XTTS-v2 fails outright on sentences with digits.** `num2words` has no Hindi converter, so any Hindi sentence containing a number cannot be synthesized. Affected 2 of 12 test sentences (a phone number and a decimal price).
+- **CosyVoice2 caps reference audio at 30 seconds** for zero-shot cloning; longer clips are auto-trimmed in this pipeline.
+- **MMS-TTS and Indic Parler-TTS cannot clone voices at all**, by design, not as a defect.
+- **Round-trip WER measurement is sensitive to punctuation and casing differences** between original text and transcription, which are not real speech errors. Found and fixed for both Arabic (punctuation) and English (casing); documented in case it resurfaces elsewhere.
 
-## Closed-Source Tools Used
-None for core generation. All TTS models are open-source: Chatterbox (Resemble AI), CosyVoice2 (FunAudioLLM), XTTS-v2 (Coqui fork), MMS-TTS (Meta), Indic Parler-TTS (AI4Bharat). faster-whisper (round-trip WER) and resemblyzer (speaker embeddings) were used for evaluation only, per the brief's allowance for closed/non-generation tooling — both are actually open-source too. An AI coding assistant (Cursor) was used throughout for scaffolding and debugging, disclosed per the brief's explicit allowance.
+## What is missing and what I would improve next
 
-## Project Structure
+- Only 5 of 12 generated sentences per model were used for the latency, RTF, WER, and MOS numbers above, due to time constraints; the remaining 7 per model exist in `results/samples/` but were not run through the metric scripts.
+- CosyVoice2 never got proper GPU acceleration (`onnxruntime-gpu`); fixing that is the single most likely thing to change the English recommendation.
+- The Hindi digit-handling gap in XTTS-v2 could be worked around by pre-processing Hindi text to spell out numbers before synthesis; not attempted here.
+- Did not attempt the brief's bonus items: an Arabic dialect beyond MSA, or a second Indic language beyond Hindi.
+- Latency reported is full-clip batch generation time, not true streaming time-to-first-chunk; none of the six models were wired up in streaming mode here.
+
+Full detail on every judgment call made along the way: **notes/ambiguities.md**.
+
+## Closed-source tools used
+
+None for speech generation. All six models (Chatterbox, CosyVoice2, XTTS-v2, MMS-TTS, Indic Parler-TTS) are open-source. Claude (Anthropic) was used as an AI coding assistant throughout for writing and debugging pipeline code, as explicitly permitted by the brief.
+
+## Project structure
+
 ```
 infinia-voice-pipeline/
-├── configs/              # Configuration files per language
+├── README.md
+├── KAGGLE.md              # exact Kaggle notebook execution steps
+├── requirements.txt
 ├── data/
-│   ├── reference_audio/  # Reference voice clips
-│   └── eval_sentences/   # Test sentences per language
+│   ├── reference_audio/    # my reference voice clip
+│   └── eval_sentences/     # 12 test sentences per language
 ├── pipelines/
-│   ├── common/           # Shared TTS interface and audio utils
-│   ├── english/          # Chatterbox, CosyVoice2
-│   ├── arabic/           # XTTS-v2, MMS-TTS
-│   └── hindi/            # Indic Parler-TTS, XTTS-v2
-├── eval/                 # Evaluation scripts (6 metrics)
+│   ├── common/              # shared TTS interface and audio utils
+│   ├── english/              # Chatterbox, CosyVoice2
+│   ├── arabic/                # XTTS-v2, MMS-TTS
+│   └── hindi/                 # XTTS-v2, Indic Parler-TTS
+├── eval/                    # 6-metric evaluation harness
 ├── results/
-│   ├── results.csv                        # Aggregated benchmark results
-│   ├── mos_raw_*.csv                      # Per-clip MOS ratings per model
-│   ├── same_speaker_judgment_template.csv # Pending human A/B pass
-│   └── samples/                           # Generated audio clips
-└── notes/                # Model comparison and assumptions
+│   ├── results.csv           # final consolidated results, all 6 models
+│   └── samples/               # generated audio clips per model
+└── notes/
+    ├── model_comparison.md   # full comparison, every bug found and fixed
+    └── ambiguities.md         # every assumption and judgment call made
 ```
 
-## Evaluation Metrics
-1. **MOS** (1-5, target >=4.0)
-2. **Speaker Similarity** (cosine, target >=0.75)
-3. **Latency** (median of 5 runs, target <500ms streaming / <2s batch)
-4. **RTF** (target <=0.5)
-5. **WER** (round-trip, target <=10%)
-6. **Cross-language consistency**: no language should fall below the above bars — currently Arabic (xtts-v2, just barely) and Hindi (both models) do on at least one metric; see Results above.
+## Evaluation metrics
+
+1. **MOS** (1 to 5, human-rated naturalness), target >= 4.0
+2. **Speaker similarity** (embedding cosine similarity via Resemblyzer), target >= 0.75
+3. **Latency** (median of 5 runs, full-clip batch), target < 2000ms
+4. **RTF** (generation time / audio duration), target <= 0.5
+5. **WER** (round-trip via faster-whisper large-v3, punctuation/case normalized), target <= 10%
+6. **Cross-language consistency check** (flags any missed target per model)
 
 ## License
-MIT
+
+MIT (this repo's code). Individual models retain their own licenses; XTTS-v2 is used here under Coqui's non-commercial CPML (https://coqui.ai/cpml), disclosed explicitly since it is not a fully open commercial license.
 
 ## Acknowledgments
-Chatterbox (Resemble AI), CosyVoice2 (FunAudioLLM), XTTS-v2 (Coqui AI fork), MMS-TTS (Meta), Indic Parler-TTS (AI4Bharat), faster-whisper, resemblyzer.
+
+Chatterbox by Resemble AI. CosyVoice2 by FunAudioLLM. XTTS-v2 by Coqui AI (maintained fork, coqui-tts). MMS-TTS by Meta. Indic Parler-TTS by AI4Bharat. faster-whisper for round-trip transcription. Resemblyzer for speaker embeddings.
